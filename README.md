@@ -22,11 +22,14 @@ Comece por `docs/README.md`.
 
 ## Estado atual
 
-Fases 1 a 3 completas e parte da fase 4, com codigo verificado por testes
-e smoke tests: `core` (42 testes), `agents`, `daemon` (inclusive servidor
-MCP para o Claude Code), `web`, `relay` e `channels` (Telegram). `desktop`
-e um esqueleto Tauri ainda nao compilado. Falta validar com chaves reais
-de provedor. Ver `docs/08-roadmap.md`.
+Fases 1 a 4 com codigo verificado por testes e smoke tests: `core` (49
+testes), `agents`, `daemon` (servidor MCP, workflows, agendamentos,
+gatilhos, push, OpenTelemetry), `web`, `relay` com cifra ponta a ponta e
+`channels` (Telegram). `desktop` compilado para Linux em Docker. Falta
+validar com chaves reais de provedor. Ver `docs/08-roadmap.md`.
+
+`./dev.sh` sobe daemon e interface em localhost e imprime o link de
+emparelhamento.
 
 ## Ambiente de desenvolvimento
 
