@@ -15,6 +15,9 @@ export WIN_HOST="${WIN_HOST:-127.0.0.1}"
 
 HOME_DIR="${AGENT_HUB_HOME:-$HOME/.agent-hub}"
 mkdir -p "$HOME_DIR"
+if [ ! -f "$HOME_DIR/.env" ]; then
+  (cd "$ROOT/daemon" && node dist/cli.js init >/dev/null 2>&1 || true)
+fi
 if [ ! -f "$HOME_DIR/config.toml" ]; then
   cat > "$HOME_DIR/config.toml" <<EOF
 agents_dir = "$ROOT/agents"
