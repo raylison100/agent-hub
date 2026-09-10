@@ -1,0 +1,25 @@
+services:
+  # Modelo local do Agent Hub. Sobe com `docker compose up -d ollama`.
+  # Puxe um modelo antes de usar: `docker compose exec ollama ollama pull llama3.2:3b`.
+  # Com NVIDIA Container Toolkit instalado, descomente o bloco deploy para usar a GPU.
+  ollama:
+    container_name: agent-hub-ollama
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ollama:/root/.ollama
+    environment:
+      OLLAMA_KEEP_ALIVE: 30m
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+volumes:
+  ollama:
+    name: agent-hub-ollama

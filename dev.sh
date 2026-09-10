@@ -12,6 +12,9 @@ if [ -z "${WIN_HOST:-}" ] && grep -qi microsoft /proc/version 2>/dev/null; then
   echo "WIN_HOST=$WIN_HOST (gateway do WSL para o Windows; Ollama precisa escutar em 0.0.0.0)"
 fi
 export WIN_HOST="${WIN_HOST:-127.0.0.1}"
+if command -v docker >/dev/null 2>&1 && [ -z "${OLLAMA_BASE_URL:-}" ]; then
+  (cd "$ROOT" && docker compose up -d ollama >/dev/null 2>&1 && echo "ollama: container agent-hub-ollama") || echo "ollama: docker compose falhou, seguindo sem ele"
+fi
 if [ -z "${OLLAMA_BASE_URL:-}" ]; then
   if curl -s -m 2 http://127.0.0.1:11434/api/tags >/dev/null 2>&1; then
     export OLLAMA_BASE_URL="http://127.0.0.1:11434/v1"
