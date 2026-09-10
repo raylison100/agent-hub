@@ -1,0 +1,12 @@
+# Sobreposicao que liga a GPU NVIDIA no Ollama. Exige o NVIDIA Container
+# Toolkit instalado na distro e o runtime configurado no Docker. O dev.sh
+# inclui este arquivo sozinho quando encontra o toolkit.
+services:
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
