@@ -12,6 +12,14 @@ if [ -z "${WIN_HOST:-}" ] && grep -qi microsoft /proc/version 2>/dev/null; then
   echo "WIN_HOST=$WIN_HOST (gateway do WSL para o Windows; Ollama precisa escutar em 0.0.0.0)"
 fi
 export WIN_HOST="${WIN_HOST:-127.0.0.1}"
+if [ -z "${OLLAMA_BASE_URL:-}" ]; then
+  if curl -s -m 2 http://127.0.0.1:11434/api/tags >/dev/null 2>&1; then
+    export OLLAMA_BASE_URL="http://127.0.0.1:11434/v1"
+  else
+    export OLLAMA_BASE_URL="http://$WIN_HOST:11434/v1"
+  fi
+fi
+echo "OLLAMA_BASE_URL=$OLLAMA_BASE_URL"
 
 HOME_DIR="${AGENT_HUB_HOME:-$HOME/.agent-hub}"
 mkdir -p "$HOME_DIR"
