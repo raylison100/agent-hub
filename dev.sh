@@ -7,6 +7,12 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" && nvm use 24 >/dev/null
 
+if [ -z "${WIN_HOST:-}" ] && grep -qi microsoft /proc/version 2>/dev/null; then
+  export WIN_HOST="$(ip route | awk '/default/ {print $3; exit}')"
+  echo "WIN_HOST=$WIN_HOST (gateway do WSL para o Windows; Ollama precisa escutar em 0.0.0.0)"
+fi
+export WIN_HOST="${WIN_HOST:-127.0.0.1}"
+
 HOME_DIR="${AGENT_HUB_HOME:-$HOME/.agent-hub}"
 mkdir -p "$HOME_DIR"
 if [ ! -f "$HOME_DIR/config.toml" ]; then
