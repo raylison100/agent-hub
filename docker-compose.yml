@@ -1,7 +1,8 @@
 services:
   # Modelo local do Agent Hub. Sobe com `docker compose up -d ollama`.
-  # Puxe um modelo antes de usar: `docker compose exec ollama ollama pull llama3.2:3b`.
-  # Com NVIDIA Container Toolkit instalado, descomente o bloco deploy para usar a GPU.
+  # Puxe um modelo antes de usar: `docker compose exec ollama ollama pull qwen3:8b`.
+  # GPU NVIDIA: some `-f docker-compose.gpu.yml` (o dev.sh faz isso sozinho).
+  # Contexto de 8k com KV em q8_0 e o que cabe na VRAM de 6 GB junto do 8B.
   ollama:
     container_name: agent-hub-ollama
     image: ollama/ollama:latest
@@ -12,15 +13,10 @@ services:
       - ollama:/root/.ollama
     environment:
       OLLAMA_KEEP_ALIVE: 30m
-      OLLAMA_CONTEXT_LENGTH: 16384
-      OLLAMA_NUM_PARALLEL: 2
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: all
-    #           capabilities: [gpu]
+      OLLAMA_CONTEXT_LENGTH: ${OLLAMA_CONTEXT_LENGTH:-8192}
+      OLLAMA_NUM_PARALLEL: ${OLLAMA_NUM_PARALLEL:-1}
+      OLLAMA_FLASH_ATTENTION: 1
+      OLLAMA_KV_CACHE_TYPE: q8_0
 
 volumes:
   ollama:
