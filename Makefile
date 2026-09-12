@@ -14,6 +14,8 @@ ajuda:
 	@echo "  make dev               sobe ollama e o daemon servindo a interface em http://127.0.0.1:47311"
 	@echo "  make daemon            so o daemon, em segundo plano, log em /tmp/daemon.log"
 	@echo "  make parar             derruba daemon e web"
+	@echo "  make servico           instala o daemon como servico do systemd, sobe com a maquina"
+	@echo "  make reiniciar         reinicia o daemon (usa o servico quando instalado)"
 	@echo "  make token             mostra o token, so necessario para outro dispositivo"
 	@echo ""
 	@echo "Desenvolvimento"
@@ -41,6 +43,16 @@ daemon: build
 	@sleep 4
 	@tail -3 /tmp/daemon.log
 
+
+servico:
+	bash daemon/scripts/instalar-servico.sh
+
+reiniciar:
+	@if systemctl --user is-enabled agent-hub.service >/dev/null 2>&1; then \
+		systemctl --user restart agent-hub.service && echo "daemon reiniciado pelo systemd"; \
+	else \
+		$(MAKE) --no-print-directory daemon; \
+	fi
 parar:
 	@pkill -f "[d]ist/cli.js start" || true
 	@pkill -f "[v]ite preview" || true
