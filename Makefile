@@ -11,10 +11,10 @@ SETUP := desktop/dist-bundle/Agent Hub_0.1.0_x64-setup.exe
 
 ajuda:
 	@echo "Subir e usar"
-	@echo "  make dev               sobe ollama, daemon 47311 e web 4173 (Ctrl+C encerra)"
+	@echo "  make dev               sobe ollama e o daemon servindo a interface em http://127.0.0.1:47311"
 	@echo "  make daemon            so o daemon, em segundo plano, log em /tmp/daemon.log"
 	@echo "  make parar             derruba daemon e web"
-	@echo "  make token             mostra o token e o link de pareamento deste dispositivo"
+	@echo "  make token             mostra o token, so necessario para outro dispositivo"
 	@echo ""
 	@echo "Desenvolvimento"
 	@echo "  make build             compila core, daemon e web"
@@ -51,7 +51,7 @@ token:
 	@echo "no Windows, pelo Explorer: \\\\wsl.localhost\\ubuntu\\home\\$(USER)\\.agent-hub\\token"
 	@cat $$HOME/.agent-hub/token
 	@echo
-	@$(NODE) daemon/dist/cli.js pair --web http://localhost:4173 --no-qr
+	@$(NODE) daemon/dist/cli.js pair --web http://127.0.0.1:47311 --no-qr
 
 build:
 	@$(PNPM) -C core build

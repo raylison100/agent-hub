@@ -50,11 +50,10 @@ fi
 (cd "$ROOT/daemon" && pnpm build >/dev/null)
 (cd "$ROOT/web" && pnpm exec vite build >/dev/null)
 
-node "$ROOT/daemon/dist/cli.js" start &
-DAEMON=$!
-trap 'kill $DAEMON 2>/dev/null' EXIT
-sleep 2
-node "$ROOT/daemon/dist/cli.js" pair --web http://localhost:4173 --no-qr
+PORT="$(grep -E '^port' "$HOME_DIR/config.toml" | head -1 | tr -dc '0-9')"
+PORT="${PORT:-47311}"
 echo
-echo "interface em http://localhost:4173 (Ctrl+C encerra os dois)"
-(cd "$ROOT/web" && pnpm exec vite preview --host 127.0.0.1 --port 4173 --strictPort)
+echo "interface em http://127.0.0.1:$PORT (o daemon serve a web e entrega a credencial sozinho nesta maquina)"
+echo "Ctrl+C encerra."
+echo
+exec node "$ROOT/daemon/dist/cli.js" start
