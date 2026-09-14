@@ -3,6 +3,7 @@ name: Release
 on:
   push:
     tags: ['v*.*.*']
+    branches: ['ci/release']
 
 permissions:
   contents: write
@@ -11,26 +12,17 @@ jobs:
   pacote:
     runs-on: ubuntu-latest
     steps:
-      - name: Raiz
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Repositorios na mesma versao
-        run: |
-          for pasta in core daemon web agents desktop relay channels docs; do
-            git clone -q "https://github.com/${GITHUB_REPOSITORY_OWNER}/agent-hub-${pasta}.git" "$pasta"
-            git -C "$pasta" checkout -q "$GITHUB_REF_NAME"
-          done
-
+        run: bash scripts/clonar-na-versao.sh
       - uses: pnpm/action-setup@v4
         with:
           version: 12
-
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-
       - name: Compilar e testar
         run: |
           pnpm -C core install --frozen-lockfile
@@ -40,19 +32,111 @@ jobs:
           pnpm -C daemon build
           pnpm -C web install --frozen-lockfile
           pnpm -C web exec vite build
-
       - name: Montar o pacote
-        run: |
-          bash daemon/scripts/pacote.sh
-          test -f "dist-pacote/agent-hub-${GITHUB_REF_NAME#v}.tgz"
-
+        run: bash daemon/scripts/pacote.sh
       - name: Instalar num container limpo
         run: bash daemon/scripts/testar-pacote.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pacote
+          path: dist-pacote/*.tgz
+          if-no-files-found: error
 
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Repositorios na mesma versao
+        run: bash scripts/clonar-na-versao.sh
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Dependencias do Tauri
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+      - name: Interface
+        run: |
+          pnpm -C core install --frozen-lockfile
+          pnpm -C core build
+          pnpm -C web install --frozen-lockfile
+          pnpm -C web exec vite build
+      - name: Deb e rpm
+        working-directory: desktop
+        run: |
+          bash scripts/make-sidecar.sh x86_64-unknown-linux-gnu
+          npx --yes @tauri-apps/cli@2 build --bundles deb rpm --config '{"build":{"beforeBuildCommand":""}}'
+          versao=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          mkdir -p ../dist-desktop
+          cp src-tauri/target/release/bundle/deb/*.deb "../dist-desktop/agent-hub-desktop-${versao}-amd64.deb"
+          cp src-tauri/target/release/bundle/rpm/*.rpm "../dist-desktop/agent-hub-desktop-${versao}-x86_64.rpm"
+          ls -la ../dist-desktop
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: dist-desktop/*
+          if-no-files-found: error
+
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Repositorios na mesma versao
+        run: bash scripts/clonar-na-versao.sh
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Interface
+        run: |
+          pnpm -C core install --frozen-lockfile
+          pnpm -C core build
+          pnpm -C web install --frozen-lockfile
+          pnpm -C web exec vite build
+      - name: Instalador NSIS
+        working-directory: desktop
+        run: |
+          npx --yes @tauri-apps/cli@2 build --bundles nsis --config '{"build":{"beforeBuildCommand":""}}'
+          versao=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          mkdir -p ../dist-desktop
+          cp src-tauri/target/release/bundle/nsis/*-setup.exe "../dist-desktop/agent-hub-desktop-${versao}-windows-x64-setup.exe"
+          ls -la ../dist-desktop
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: dist-desktop/*
+          if-no-files-found: error
+
+  publicar:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [pacote, linux, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Repositorios na mesma versao
+        run: bash scripts/clonar-na-versao.sh
+      - uses: actions/download-artifact@v4
+        with:
+          path: artefatos
+          merge-multiple: true
       - name: Publicar
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          versao="${GITHUB_REF_NAME#v}"
+          test -f "artefatos/agent-hub-${versao}.tgz"
+          cp "artefatos/agent-hub-${versao}.tgz" artefatos/agent-hub.tgz
           bash scripts/notas-da-versao.sh "$GITHUB_REF_NAME" > notas.md
-          cp "dist-pacote/agent-hub-${GITHUB_REF_NAME#v}.tgz" dist-pacote/agent-hub.tgz
-          gh release create "$GITHUB_REF_NAME" "dist-pacote/agent-hub-${GITHUB_REF_NAME#v}.tgz" dist-pacote/agent-hub.tgz --title "$GITHUB_REF_NAME" --notes-file notas.md
+          gh release create "$GITHUB_REF_NAME" artefatos/* --title "$GITHUB_REF_NAME" --notes-file notas.md

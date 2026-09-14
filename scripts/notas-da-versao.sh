@@ -22,6 +22,16 @@ Requisitos: Linux ou WSL, Node 22 ou superior, \`build-essential\` e \`python3\`
 agent-hub atualizar $URL
 \`\`\`
 
+## Aplicativos de desktop
+
+Os aplicativos sao so a janela: o daemon precisa estar instalado pelo pacote acima.
+
+- Windows: \`agent-hub-desktop-$VERSAO-windows-x64-setup.exe\`. O daemon roda no WSL; sem ele, o app mostra os comandos para instalar.
+- Debian e Ubuntu: \`agent-hub-desktop-$VERSAO-amd64.deb\`, com \`sudo apt install ./agent-hub-desktop-$VERSAO-amd64.deb\`.
+- Fedora e derivados: \`agent-hub-desktop-$VERSAO-x86_64.rpm\`.
+
+Os instaladores nao sao assinados: o Windows pode avisar na primeira execucao.
+
 ## O que mudou
 MD
 
