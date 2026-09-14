@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+
+jobs:
+  pacote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Raiz
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Repositorios na mesma versao
+        run: |
+          for pasta in core daemon web agents desktop relay channels docs; do
+            git clone -q "https://github.com/${GITHUB_REPOSITORY_OWNER}/agent-hub-${pasta}.git" "$pasta"
+            git -C "$pasta" checkout -q "$GITHUB_REF_NAME"
+          done
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Compilar e testar
+        run: |
+          pnpm -C core install --frozen-lockfile
+          pnpm -C core build
+          pnpm -C core test
+          pnpm -C daemon install --frozen-lockfile
+          pnpm -C daemon build
+          pnpm -C web install --frozen-lockfile
+          pnpm -C web exec vite build
+
+      - name: Montar o pacote
+        run: |
+          bash daemon/scripts/pacote.sh
+          test -f "dist-pacote/agent-hub-${GITHUB_REF_NAME#v}.tgz"
+
+      - name: Instalar num container limpo
+        run: bash daemon/scripts/testar-pacote.sh
+
+      - name: Publicar
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          bash scripts/notas-da-versao.sh "$GITHUB_REF_NAME" > notas.md
+          gh release create "$GITHUB_REF_NAME" "dist-pacote/agent-hub-${GITHUB_REF_NAME#v}.tgz" --title "$GITHUB_REF_NAME" --notes-file notas.md

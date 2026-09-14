@@ -3,11 +3,12 @@ ROOT := $(shell pwd)
 NVM := source $$HOME/.nvm/nvm.sh >/dev/null 2>&1; nvm use 24 >/dev/null 2>&1
 PNPM := $(NVM); pnpm
 NODE := $(NVM); node
-SETUP := desktop/dist-bundle/Agent Hub_0.1.0_x64-setup.exe
+VERSAO_ATUAL := $(shell python3 -c "import json; print(json.load(open('desktop/src-tauri/tauri.conf.json'))['version'])" 2>/dev/null)
+SETUP := desktop/dist-bundle/Agent Hub_$(VERSAO_ATUAL)_x64-setup.exe
 
 .DEFAULT_GOAL := ajuda
 
-.PHONY: ajuda dev daemon parar token build teste tipos limpar ollama-gpu ollama-parar windows windows-instalar linux instalar-deb pacote pacote-testar
+.PHONY: ajuda dev daemon parar token build teste tipos limpar ollama-gpu ollama-parar windows windows-instalar linux instalar-deb pacote pacote-testar versao
 
 ajuda:
 	@echo "Subir e usar"
@@ -34,6 +35,9 @@ ajuda:
 	@echo "  make instalar-deb      instala o deb gerado no WSL (pede sudo)"
 	@echo "  make pacote            gera o pacote instalavel agent-hub-VERSAO.tgz em dist-pacote"
 	@echo "  make pacote-testar     instala o pacote num container limpo e confere a saude"
+	@echo ""
+	@echo "Versao"
+	@echo "  make versao VERSAO=X.Y.Z  troca a versao em todos os pacotes, cria a tag nos nove repositorios e dispara a Release"
 
 dev:
 	bash dev.sh
@@ -110,3 +114,6 @@ pacote: build
 
 pacote-testar: pacote
 	@bash daemon/scripts/testar-pacote.sh
+
+versao:
+	@$(NVM); bash scripts/versao.sh "$(VERSAO)"
