@@ -105,11 +105,17 @@ jobs:
           pnpm -C web exec vite build
       - name: Instalador NSIS
         working-directory: desktop
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
-          npx --yes @tauri-apps/cli@2 build --bundles nsis --config '{"build":{"beforeBuildCommand":""}}'
+          if [ -n "$TAURI_SIGNING_PRIVATE_KEY" ]; then assinar=true; else assinar=false; echo "::warning::sem TAURI_SIGNING_PRIVATE_KEY: o instalador sai sem assinatura e o app nao se atualiza sozinho para esta versao"; fi
+          npx --yes @tauri-apps/cli@2 build --bundles nsis --config '{"build":{"beforeBuildCommand":""}}' --config "{\"bundle\":{\"createUpdaterArtifacts\":${assinar}}}"
           versao=$(node -p "require('./src-tauri/tauri.conf.json').version")
           mkdir -p ../dist-desktop
-          cp src-tauri/target/release/bundle/nsis/*-setup.exe "../dist-desktop/agent-hub-desktop-${versao}-windows-x64-setup.exe"
+          destino="../dist-desktop/agent-hub-desktop-${versao}-windows-x64-setup.exe"
+          cp src-tauri/target/release/bundle/nsis/*-setup.exe "$destino"
+          if [ "$assinar" = true ]; then cp src-tauri/target/release/bundle/nsis/*-setup.exe.sig "${destino}.sig"; fi
           ls -la ../dist-desktop
       - uses: actions/upload-artifact@v4
         with:
@@ -139,4 +145,5 @@ jobs:
           test -f "artefatos/agent-hub-${versao}.tgz"
           cp "artefatos/agent-hub-${versao}.tgz" artefatos/agent-hub.tgz
           bash scripts/notas-da-versao.sh "$GITHUB_REF_NAME" > notas.md
+          bash scripts/manifesto-de-atualizacao.sh "$versao" artefatos notas.md
           gh release create "$GITHUB_REF_NAME" artefatos/* --title "$GITHUB_REF_NAME" --notes-file notas.md
