@@ -29,7 +29,7 @@ for par in ".:agent-hub" "core:agent-hub-core" "daemon:agent-hub-daemon" "web:ag
   pasta="${par%%:*}"; nome="${par##*:}"
   d="$ROOT/$pasta"
   [ -d "$d/.git" ] || continue
-  anterior="$(git -C "$d" describe --tags --abbrev=0 --match 'v*' "$TAG^" 2>/dev/null || true)"
+  anterior="$(git -C "$d" describe --tags --abbrev=0 --match 'v*' --exclude "$TAG" "$TAG" 2>/dev/null || true)"
   intervalo="${anterior:+$anterior..}$TAG"
   linhas="$(git -C "$d" log --no-merges --format='- %s' "$intervalo" | grep -v "^- Versao $VERSAO$" | head -40 || true)"
   [ -n "$linhas" ] || continue
