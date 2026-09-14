@@ -18,7 +18,7 @@ for r in $SUBS .; do
 done
 
 node --input-type=module - "$ROOT" "$VERSAO" <<'JS'
-import { readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync, renameSync, writeFileSync } from 'node:fs'
 const [root, versao] = process.argv.slice(2)
 for (const r of ['core', 'daemon', 'web', 'relay', 'channels', 'desktop']) {
   const p = `${root}/${r}/package.json`
@@ -33,7 +33,8 @@ writeFileSync(tauri, JSON.stringify(t, null, 2) + '\n')
 const cargo = `${root}/desktop/src-tauri/Cargo.toml`
 writeFileSync(cargo, readFileSync(cargo, 'utf8').replace(/^version = ".*"$/m, `version = "${versao}"`))
 const lock = `${root}/desktop/src-tauri/Cargo.lock`
-writeFileSync(lock, readFileSync(lock, 'utf8').replace(/(name = "agent-hub-desktop"\nversion = )".*"/, `$1"${versao}"`))
+writeFileSync(`${lock}.tmp`, readFileSync(lock, 'utf8').replace(/(name = "agent-hub-desktop"\nversion = )".*"/, `$1"${versao}"`))
+renameSync(`${lock}.tmp`, lock)
 JS
 
 for r in $SUBS .; do
