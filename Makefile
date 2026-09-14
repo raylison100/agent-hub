@@ -7,7 +7,7 @@ SETUP := desktop/dist-bundle/Agent Hub_0.1.0_x64-setup.exe
 
 .DEFAULT_GOAL := ajuda
 
-.PHONY: ajuda dev daemon parar token build teste tipos limpar ollama-gpu ollama-parar windows windows-instalar linux instalar-deb
+.PHONY: ajuda dev daemon parar token build teste tipos limpar ollama-gpu ollama-parar windows windows-instalar linux instalar-deb pacote pacote-testar
 
 ajuda:
 	@echo "Subir e usar"
@@ -32,6 +32,8 @@ ajuda:
 	@echo "  make windows-instalar  gera e instala no Windows em modo silencioso"
 	@echo "  make linux             gera deb e rpm em desktop/dist-bundle"
 	@echo "  make instalar-deb      instala o deb gerado no WSL (pede sudo)"
+	@echo "  make pacote            gera o pacote instalavel agent-hub-VERSAO.tgz em dist-pacote"
+	@echo "  make pacote-testar     instala o pacote num container limpo e confere a saude"
 
 dev:
 	bash dev.sh
@@ -102,3 +104,9 @@ linux: build
 
 instalar-deb:
 	@sudo apt install -y ./desktop/dist-bundle/*.deb
+
+pacote: build
+	@$(NVM); bash daemon/scripts/pacote.sh
+
+pacote-testar: pacote
+	@bash daemon/scripts/testar-pacote.sh

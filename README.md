@@ -81,7 +81,20 @@ partida: Makefile, scripts de desenvolvimento e a wiki.
 
 ## Comecar
 
-Requisitos: Linux ou WSL, Node 24 com pnpm, git e, para modelo local, Docker.
+Requisitos: Linux ou WSL, Node 22 ou superior e `build-essential` com `python3`.
+
+```bash
+npm install -g https://github.com/raylison100/agent-hub/releases/download/v0.1.0/agent-hub-0.1.0.tgz
+agent-hub instalar
+```
+
+O `instalar` cria a configuracao, copia os agentes iniciais, liga o daemon como
+servico do systemd e confere a saude. Abra `http://127.0.0.1:47311`, cadastre a
+chave de um provedor em Configuracoes, Chaves e comece a conversar. Detalhes e
+o caminho pelo codigo em
+[Instalacao](https://github.com/raylison100/agent-hub/wiki/Instalacao).
+
+Para desenvolver:
 
 ```bash
 git clone https://github.com/raylison100/agent-hub.git
@@ -90,11 +103,6 @@ bash clonar-tudo.sh
 make build
 make dev
 ```
-
-Abra `http://127.0.0.1:47311`. Na propria maquina a conexao e automatica. Em
-Configuracoes, Chaves, cadastre a chave de pelo menos um provedor e comece a
-conversar. O passo a passo, com modelo local e servico do systemd, esta em
-[Instalacao](https://github.com/raylison100/agent-hub/wiki/Instalacao).
 
 `make` sem argumento lista todos os comandos.
 
