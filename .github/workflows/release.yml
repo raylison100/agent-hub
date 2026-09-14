@@ -54,4 +54,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           bash scripts/notas-da-versao.sh "$GITHUB_REF_NAME" > notas.md
-          gh release create "$GITHUB_REF_NAME" "dist-pacote/agent-hub-${GITHUB_REF_NAME#v}.tgz" --title "$GITHUB_REF_NAME" --notes-file notas.md
+          cp "dist-pacote/agent-hub-${GITHUB_REF_NAME#v}.tgz" dist-pacote/agent-hub.tgz
+          gh release create "$GITHUB_REF_NAME" "dist-pacote/agent-hub-${GITHUB_REF_NAME#v}.tgz" dist-pacote/agent-hub.tgz --title "$GITHUB_REF_NAME" --notes-file notas.md
